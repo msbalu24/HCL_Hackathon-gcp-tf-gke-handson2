@@ -1,0 +1,263 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-catalog
+  namespace: ecommerce
+  labels:
+    app: product-catalog
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: product-catalog
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: product-catalog
+        version: v1
+    spec:
+      nodeSelector:
+        role: general
+      containers:
+        - name: product-catalog
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 8080
+              name: http
+          command:
+            - /bin/sh
+            - -c
+            - |
+              cat << 'NGINX' > /etc/nginx/conf.d/default.conf
+              server {
+                  listen 8080;
+                  location /healthz { return 200 '{"status":"alive","service":"product-catalog"}'; add_header Content-Type application/json; }
+                  location /ready { return 200 '{"status":"ready","service":"product-catalog"}'; add_header Content-Type application/json; }
+                  location / { return 200 '{"service":"product-catalog","version":"v1","items":1250}'; add_header Content-Type application/json; }
+              }
+              NGINX
+              exec nginx -g 'daemon off;'
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-catalog
+  namespace: ecommerce
+  labels:
+    app: product-catalog
+spec:
+  type: ClusterIP
+  selector:
+    app: product-catalog
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+  namespace: ecommerce
+  labels:
+    app: cart
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: cart
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: cart
+        version: v1
+    spec:
+      nodeSelector:
+        role: general
+      containers:
+        - name: cart
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 8080
+              name: http
+          command:
+            - /bin/sh
+            - -c
+            - |
+              cat << 'NGINX' > /etc/nginx/conf.d/default.conf
+              server {
+                  listen 8080;
+                  location /healthz { return 200 '{"status":"alive","service":"cart"}'; add_header Content-Type application/json; }
+                  location /ready { return 200 '{"status":"ready","service":"cart"}'; add_header Content-Type application/json; }
+                  location / { return 200 '{"service":"cart","version":"v1","status":"active"}'; add_header Content-Type application/json; }
+              }
+              NGINX
+              exec nginx -g 'daemon off;'
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart
+  namespace: ecommerce
+  labels:
+    app: cart
+spec:
+  type: ClusterIP
+  selector:
+    app: cart
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory
+  namespace: ecommerce
+  labels:
+    app: inventory
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: inventory
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: inventory
+        version: v1
+    spec:
+      nodeSelector:
+        role: general
+      containers:
+        - name: inventory
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 8080
+              name: http
+          command:
+            - /bin/sh
+            - -c
+            - |
+              cat << 'NGINX' > /etc/nginx/conf.d/default.conf
+              server {
+                  listen 8080;
+                  location /healthz { return 200 '{"status":"alive","service":"inventory"}'; add_header Content-Type application/json; }
+                  location /ready { return 200 '{"status":"ready","service":"inventory"}'; add_header Content-Type application/json; }
+                  location / { return 200 '{"service":"inventory","version":"v1","in_stock":true}'; add_header Content-Type application/json; }
+              }
+              NGINX
+              exec nginx -g 'daemon off;'
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory
+  namespace: ecommerce
+  labels:
+    app: inventory
+spec:
+  type: ClusterIP
+  selector:
+    app: inventory
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
