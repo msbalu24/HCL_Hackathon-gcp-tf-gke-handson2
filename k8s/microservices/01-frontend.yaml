@@ -9,18 +9,19 @@ data:
         listen 8080;
         root /usr/share/nginx/html;
         index index.html;
+        resolver 10.30.0.10 valid=5s ipv6=off;
 
         location /healthz { return 200 '{"status":"alive","service":"frontend"}'; add_header Content-Type application/json; }
         location /ready { return 200 '{"status":"ready","service":"frontend"}'; add_header Content-Type application/json; }
         location /api/frontend { return 200 '{"service":"frontend","version":"v1","duty":"Web UI & Reverse Proxy Gateway","nodePool":"general-pool"}'; add_header Content-Type application/json; }
 
-        location /api/catalog { proxy_http_version 1.1; proxy_pass http://product-catalog:80/; }
-        location /api/cart { proxy_http_version 1.1; proxy_pass http://cart:80/; }
-        location /api/inventory { proxy_http_version 1.1; proxy_pass http://inventory:80/; }
-        location /api/order { proxy_http_version 1.1; proxy_pass http://order:80/; }
-        location /api/order-to-payment { proxy_http_version 1.1; proxy_pass http://order:80/pay; }
-        location /api/payment-direct { proxy_http_version 1.1; proxy_pass http://payment:80/; }
-        location /api/notification { proxy_http_version 1.1; proxy_pass http://notification:80/; }
+        location /api/catalog { set $up "http://product-catalog:80/"; proxy_http_version 1.1; proxy_pass $up; }
+        location /api/cart { set $up "http://cart:80/"; proxy_http_version 1.1; proxy_pass $up; }
+        location /api/inventory { set $up "http://inventory:80/"; proxy_http_version 1.1; proxy_pass $up; }
+        location /api/order { set $up "http://order:80/"; proxy_http_version 1.1; proxy_pass $up; }
+        location /api/order-to-payment { set $up "http://order:80/pay"; proxy_http_version 1.1; proxy_pass $up; }
+        location /api/payment-direct { set $up "http://payment:80/"; proxy_http_version 1.1; proxy_pass $up; }
+        location /api/notification { set $up "http://notification:80/"; proxy_http_version 1.1; proxy_pass $up; }
     }
   index.html: |
     <!DOCTYPE html>
@@ -83,7 +84,7 @@ data:
             <span class="badge">general-pool | Envoy mTLS</span>
             <h2>2. Product Catalog Service</h2>
             <div class="duty"><strong>Duty:</strong> Serves product listings, SKUs, pricing metadata, and search results to shoppers.</div>
-            <div class="meta">Port: 8080 | Strict mTLS Enabled | Replicas: 2</div>
+            <div class="meta">Port: 8080 | Strict mTLS Enabled | Replicas: 1</div>
           </div>
           <div>
             <div class="btn-row"><button class="svc-btn" onclick="callApi('/api/catalog', 'res-catalog')">Test Product Catalog</button></div>
@@ -96,7 +97,7 @@ data:
             <span class="badge">general-pool | Envoy mTLS</span>
             <h2>3. Shopping Cart Service</h2>
             <div class="duty"><strong>Duty:</strong> Manages active customer shopping sessions, item quantities, and checkout cart state.</div>
-            <div class="meta">Port: 8080 | Strict mTLS Enabled | Replicas: 2</div>
+            <div class="meta">Port: 8080 | Strict mTLS Enabled | Replicas: 1</div>
           </div>
           <div>
             <div class="btn-row"><button class="svc-btn" onclick="callApi('/api/cart', 'res-cart')">Test Cart</button></div>
@@ -109,7 +110,7 @@ data:
             <span class="badge">general-pool | Envoy mTLS</span>
             <h2>4. Inventory Service</h2>
             <div class="duty"><strong>Duty:</strong> Tracks real-time warehouse stock levels and reserves items during order placement.</div>
-            <div class="meta">Port: 8080 | Strict mTLS Enabled | Replicas: 2</div>
+            <div class="meta">Port: 8080 | Strict mTLS Enabled | Replicas: 1</div>
           </div>
           <div>
             <div class="btn-row"><button class="svc-btn" onclick="callApi('/api/inventory', 'res-inventory')">Test Inventory</button></div>
@@ -151,7 +152,7 @@ data:
             <span class="badge">general-pool | Envoy mTLS</span>
             <h2>7. Notification Service</h2>
             <div class="duty"><strong>Duty:</strong> Dispatches asynchronous order confirmation emails, SMS alerts, and payment receipts.</div>
-            <div class="meta">Port: 8080 | Zero-Downtime RollingUpdate | Replicas: 2</div>
+            <div class="meta">Port: 8080 | Zero-Downtime RollingUpdate | Replicas: 1</div>
           </div>
           <div>
             <div class="btn-row"><button class="svc-btn" onclick="callApi('/api/notification', 'res-notification')">Test Notification</button></div>
