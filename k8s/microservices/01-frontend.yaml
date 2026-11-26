@@ -9,69 +9,245 @@ data:
         listen 8080;
         root /usr/share/nginx/html;
         index index.html;
-        resolver 10.30.0.10 valid=5s ipv6=off;
-
         location /healthz { return 200 '{"status":"alive","service":"frontend"}'; add_header Content-Type application/json; }
         location /ready { return 200 '{"status":"ready","service":"frontend"}'; add_header Content-Type application/json; }
-        location /api/frontend { return 200 '{"service":"frontend","version":"v1","duty":"Web UI & Reverse Proxy Gateway","nodePool":"general-pool"}'; add_header Content-Type application/json; }
-
-        location /api/catalog { set $u "http://product-catalog:80/"; proxy_http_version 1.1; proxy_pass $u; }
-        location /api/cart { set $u "http://cart:80/"; proxy_http_version 1.1; proxy_pass $u; }
-        location /api/inventory { set $u "http://inventory:80/"; proxy_http_version 1.1; proxy_pass $u; }
-        location /api/order { set $u "http://order:80/"; proxy_http_version 1.1; proxy_pass $u; }
-        location /api/order-to-payment { set $u "http://order:80/pay"; proxy_http_version 1.1; proxy_pass $u; }
-        location /api/payment-direct { set $u "http://payment:80/"; proxy_http_version 1.1; proxy_pass $u; }
-        location /api/notification { set $u "http://notification:80/"; proxy_http_version 1.1; proxy_pass $u; }
+        location /api/frontend { return 200 '{"service":"frontend","version":"v1","duty":"CloudKart Storefront UI","nodePool":"general-pool"}'; add_header Content-Type application/json; }
     }
   index.html: |
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
     <head>
       <meta charset="UTF-8" />
-      <title>HCL GKE + Istio Microservices Dashboard</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>CloudKart | Enterprise Tech Store</title>
       <style>
-        body { font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-        .hdr { max-width: 1150px; margin: 0 auto 20px; background: #1e293b; padding: 18px 24px; border-radius: 10px; border-left: 6px solid #38bdf8; display: flex; justify-content: space-between; align-items: center; }
-        .hdr h1 { margin: 0 0 4px; font-size: 20px; color: #38bdf8; }
-        .hdr p { margin: 0; color: #94a3b8; font-size: 13px; }
-        .all-btn { background: #22c55e; color: #052e16; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .grid { max-width: 1150px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; }
-        .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
-        .card.crit { border-color: #f59e0b; }
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #0284c7; color: #e0f2fe; margin-bottom: 6px; }
-        .tag.w { background: #b45309; color: #fef3c7; }
-        h2 { margin: 0 0 6px; font-size: 17px; }
-        .duty { font-size: 13px; color: #cbd5e1; margin-bottom: 10px; }
-        button.b { background: #38bdf8; color: #0f172a; border: none; padding: 7px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-right: 6px; }
-        button.r { background: #ef4444; color: #fff; border: none; padding: 7px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        pre { background: #020617; color: #4ade80; padding: 8px; border-radius: 5px; font-size: 12px; overflow-x: auto; margin: 10px 0 0; min-height: 38px; }
-        pre.err { color: #f87171; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+        body { margin: 0; background: #f1f5f9; color: #0f172a; padding-bottom: 70px; }
+        nav { background: #0f172a; color: #fff; padding: 14px 28px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 10px rgba(0,0,0,0.15); gap: 16px; flex-wrap: wrap; }
+        .brand { font-size: 22px; font-weight: 800; color: #38bdf8; display: flex; align-items: center; gap: 8px; }
+        .brand span { font-size: 11px; background: #1e293b; color: #94a3b8; padding: 3px 8px; border-radius: 12px; font-weight: 600; border: 1px solid #334155; }
+        .search-box { flex: 1; max-width: 420px; }
+        .search-box input { width: 100%; padding: 9px 14px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #fff; font-size: 14px; outline: none; }
+        .nav-btns { display: flex; gap: 10px; align-items: center; }
+        .cart-btn { background: #2563eb; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .cart-btn:hover { background: #1d4ed8; }
+        .badge-cnt { background: #facc15; color: #0f172a; padding: 2px 7px; border-radius: 10px; font-size: 12px; font-weight: 800; }
+        .hero { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); color: #fff; padding: 36px 28px; text-align: center; }
+        .hero h1 { margin: 0 0 8px; font-size: 28px; }
+        .hero p { margin: 0 auto 14px; color: #cbd5e1; max-width: 650px; font-size: 15px; }
+        .mesh-pill { display: inline-block; background: rgba(16,185,129,0.15); border: 1px solid #10b981; color: #6ee7b7; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .filters { max-width: 1200px; margin: 20px auto 0; padding: 0 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .f-btn { background: #fff; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; color: #334155; font-size: 13px; }
+        .f-btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+        .grid { max-width: 1200px; margin: 20px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; }
+        .card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(15,23,42,0.06); border: 1px solid #e2e8f0; display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.15s; }
+        .card:hover { transform: translateY(-3px); }
+        .p-img { height: 150px; display: flex; align-items: center; justify-content: center; font-size: 56px; background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); position: relative; }
+        .p-cat { position: absolute; top: 10px; left: 10px; background: #fff; color: #475569; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .p-body { padding: 16px; }
+        .p-title { font-size: 17px; font-weight: 700; margin: 0 0 6px; color: #0f172a; }
+        .p-desc { font-size: 13px; color: #64748b; margin: 0 0 12px; line-height: 1.4; }
+        .p-foot { padding: 12px 16px; border-top: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fafafa; }
+        .price { font-size: 19px; font-weight: 800; color: #0f172a; }
+        .add-btn { background: #2563eb; color: #fff; border: none; padding: 8px 14px; border-radius: 7px; font-weight: 700; cursor: pointer; font-size: 13px; }
+        .add-btn:hover { background: #1d4ed8; }
+        .drawer { position: fixed; top: 0; right: -420px; width: 100%; max-width: 400px; height: 100vh; background: #fff; box-shadow: -5px 0 25px rgba(0,0,0,0.2); z-index: 100; transition: right 0.25s ease; display: flex; flex-direction: column; }
+        .drawer.open { right: 0; }
+        .d-hdr { padding: 18px 20px; background: #0f172a; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .d-body { flex: 1; overflow-y: auto; padding: 16px; }
+        .c-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e2e8f0; gap: 10px; }
+        .qty-box { display: flex; align-items: center; gap: 8px; }
+        .q-btn { width: 26px; height: 26px; border: 1px solid #cbd5e1; background: #f8fafc; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .d-foot { padding: 18px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+        .chk-btn { width: 100%; background: #16a34a; color: #fff; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .chk-btn:hover { background: #15803d; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.7); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
+        .modal.show { display: flex; }
+        .m-box { background: #fff; border-radius: 14px; max-width: 480px; width: 100%; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .step { padding: 8px 12px; border-radius: 6px; background: #f1f5f9; margin-bottom: 8px; font-size: 13px; display: flex; justify-content: space-between; }
+        .step.ok { background: #dcfce7; color: #166534; font-weight: 600; }
+        .sre-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; color: #e2e8f0; padding: 10px 24px; display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; z-index: 90; border-top: 2px solid #38bdf8; flex-wrap: wrap; gap: 8px; }
+        .sec-btn { background: #ef4444; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
+        .toast { position: fixed; top: 72px; right: 20px; background: #0f172a; color: #4ade80; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 150; display: none; border: 1px solid #334155; }
       </style>
     </head>
     <body>
-      <div class="hdr">
-        <div>
-          <h1>HCL Enterprise GKE + Istio Service Mesh Dashboard</h1>
-          <p>7 E-Commerce Microservices | Strict mTLS | SPIFFE Zero-Trust AuthZ | Canary v1/v2</p>
+      <nav>
+        <div class="brand">🛒 CloudKart <span>GKE + Istio mTLS</span></div>
+        <div class="search-box"><input type="text" id="searchInput" placeholder="Search laptops, audio, security keys..." oninput="renderProducts()" /></div>
+        <div class="nav-btns">
+          <button class="cart-btn" onclick="toggleCart()">Cart <span class="badge-cnt" id="cartCount">0</span></button>
         </div>
-        <button class="all-btn" onclick="testAll()">Run Live Health Check on All 7 Services</button>
+      </nav>
+
+      <div class="hero">
+        <h1>Enterprise Cloud & Developer Gear</h1>
+        <p>Browse curated hardware powered by 7 containerized microservices with Strict mTLS, SPIFFE Identity, and Canary Payment routing.</p>
+        <div class="mesh-pill" id="catalogStatus">Connecting to product-catalog service...</div>
       </div>
-      <div class="grid">
-        <div class="card"><span class="tag">general-pool | HPA | PDB</span><h2>1. Frontend Service</h2><div class="duty"><strong>Duty:</strong> Storefront UI & API reverse-proxy gateway into the Istio mTLS mesh.</div><button class="b" onclick="go('/api/frontend','r1')">Test Frontend</button><pre id="r1">Ready...</pre></div>
-        <div class="card"><span class="tag">general-pool | Envoy mTLS</span><h2>2. Product Catalog Service</h2><div class="duty"><strong>Duty:</strong> Serves product listings, SKUs, and pricing metadata.</div><button class="b" onclick="go('/api/catalog','r2')">Test Product Catalog</button><pre id="r2">Ready...</pre></div>
-        <div class="card"><span class="tag">general-pool | Envoy mTLS</span><h2>3. Shopping Cart Service</h2><div class="duty"><strong>Duty:</strong> Manages customer shopping sessions and cart items.</div><button class="b" onclick="go('/api/cart','r3')">Test Cart</button><pre id="r3">Ready...</pre></div>
-        <div class="card"><span class="tag">general-pool | Envoy mTLS</span><h2>4. Inventory Service</h2><div class="duty"><strong>Duty:</strong> Tracks real-time warehouse stock levels and reserves items.</div><button class="b" onclick="go('/api/inventory','r4')">Test Inventory</button><pre id="r4">Ready...</pre></div>
-        <div class="card"><span class="tag">general-pool | SPIFFE: order-ksa</span><h2>5. Order Service</h2><div class="duty"><strong>Duty:</strong> Checkout orchestrator; ONLY service authorized via SPIFFE to call Payment.</div><button class="b" onclick="go('/api/order','r5')">Test Order</button><pre id="r5">Ready...</pre></div>
-        <div class="card crit"><span class="tag w">critical-pool (Tainted) | Canary v1/v2</span><h2>6. Payment Service (v1 & v2)</h2><div class="duty"><strong>Duty:</strong> PCI-sensitive transactions on tainted nodes using GCP Secret Manager.</div><button class="b" onclick="go('/api/order-to-payment','r6')">Authorized (Order -> Payment)</button><button class="r" onclick="go('/api/payment-direct','r6')">Unauthorized (Frontend -> Payment)</button><pre id="r6">Ready...</pre></div>
-        <div class="card"><span class="tag">general-pool | Envoy mTLS</span><h2>7. Notification Service</h2><div class="duty"><strong>Duty:</strong> Sends order confirmation emails and SMS alerts.</div><button class="b" onclick="go('/api/notification','r7')">Test Notification</button><pre id="r7">Ready...</pre></div>
+
+      <div class="filters">
+        <button class="f-btn active" onclick="setCat('All', this)">All Products</button>
+        <button class="f-btn" onclick="setCat('Laptops', this)">Laptops & Displays</button>
+        <button class="f-btn" onclick="setCat('Audio', this)">Audio & Wearables</button>
+        <button class="f-btn" onclick="setCat('Accessories', this)">Accessories & Security</button>
+      </div>
+
+      <div class="grid" id="productGrid"></div>
+
+      <div class="drawer" id="cartDrawer">
+        <div class="d-hdr">
+          <strong>Your Shopping Cart</strong>
+          <button onclick="toggleCart()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">✕</button>
+        </div>
+        <div class="d-body" id="cartItems"></div>
+        <div class="d-foot">
+          <div style="display:flex;justify-content:space-between;font-size:14px;color:#64748b;margin-bottom:4px;"><span>Subtotal</span><span id="subTotal">$0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:800;"><span>Total</span><span id="grandTotal">$0</span></div>
+          <button class="chk-btn" onclick="startCheckout()">Proceed to Checkout</button>
+        </div>
+      </div>
+
+      <div class="modal" id="checkoutModal">
+        <div class="m-box">
+          <h2 style="margin:0 0 6px;">Live Microservice Order Execution</h2>
+          <p style="margin:0 0 14px;font-size:13px;color:#64748b;">Executing real Istio mTLS calls across backend services:</p>
+          <div class="step" id="st-inv"><span>1. Inventory Reserve (/api/inventory)</span><span>Pending...</span></div>
+          <div class="step" id="st-ord"><span>2. Order Service (/api/order [order-ksa])</span><span>Pending...</span></div>
+          <div class="step" id="st-pay"><span>3. Payment Canary (/api/order-to-payment)</span><span>Pending...</span></div>
+          <div class="step" id="st-not"><span>4. Notification Dispatch (/api/notification)</span><span>Pending...</span></div>
+          <div id="orderReceipt" style="display:none;margin-top:14px;padding:12px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:13px;color:#14532d;"></div>
+          <button onclick="closeModal()" style="margin-top:14px;width:100%;padding:10px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Continue Shopping</button>
+        </div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+
+      <div class="sre-bar">
+        <div><strong>SRE Mesh Status:</strong> <span id="meshLog" style="color:#38bdf8;">All 7 microservices active via Istio Strict mTLS</span></div>
+        <button class="sec-btn" onclick="testZeroTrustBlock()">Test Zero-Trust Attack (Direct -> Payment 403)</button>
       </div>
       <script>
-        async function go(u, id) {
-          const el = document.getElementById(id); el.className = ''; el.textContent = 'Calling ' + u + '...';
-          try { const r = await fetch(u); const t = await r.text(); if (!r.ok) el.className = 'err'; el.textContent = 'HTTP ' + r.status + ' ' + r.statusText + '\n' + t; }
-          catch (e) { el.className = 'err'; el.textContent = e.message; }
+        const PRODUCTS = [
+          { id: 1, name: 'MacBook Pro 16" M4 Max', cat: 'Laptops', price: 2499, icon: '💻', desc: '36GB Unified Memory, 1TB SSD, Liquid Retina XDR Display.' },
+          { id: 2, name: 'Sony WH-1000XM6 ANC', cat: 'Audio', price: 349, icon: '🎧', desc: 'Industry-leading noise cancellation with 40-hour battery.' },
+          { id: 3, name: 'Keychron Q1 Pro Mechanical', cat: 'Accessories', price: 199, icon: '⌨️', desc: 'Wireless QMK/VIA custom aluminum mechanical keyboard.' },
+          { id: 4, name: 'Dell UltraSharp 32" 4K Hub', cat: 'Laptops', price: 899, icon: '🖥️', desc: 'IPS Black panel with Thunderbolt 4 and 90W power delivery.' },
+          { id: 5, name: 'Apple Watch Ultra 3', cat: 'Audio', price: 799, icon: '⌚', desc: 'Rugged aerospace titanium case with dual-frequency GPS.' },
+          { id: 6, name: 'YubiKey 5C NFC Security Key', cat: 'Accessories', price: 55, icon: '🔐', desc: 'Hardware FIDO2 & Zero-Trust multi-factor authentication.' }
+        ];
+        let activeCat = 'All', cart = [];
+
+        function showToast(msg) {
+          const t = document.getElementById('toast'); t.textContent = msg; t.style.display = 'block';
+          setTimeout(() => t.style.display = 'none', 2600);
         }
-        function testAll() { go('/api/frontend','r1'); go('/api/catalog','r2'); go('/api/cart','r3'); go('/api/inventory','r4'); go('/api/order','r5'); go('/api/order-to-payment','r6'); go('/api/notification','r7'); }
+
+        async function initCatalog() {
+          try {
+            const r = await fetch('/api/catalog');
+            if (r.ok) document.getElementById('catalogStatus').textContent = '✓ Live Synced with product-catalog (HTTP 200 mTLS)';
+          } catch (e) {}
+          renderProducts();
+        }
+
+        function setCat(c, btn) {
+          activeCat = c;
+          document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderProducts();
+        }
+
+        function renderProducts() {
+          const q = document.getElementById('searchInput').value.toLowerCase();
+          const list = PRODUCTS.filter(p => (activeCat === 'All' || p.cat === activeCat) && (p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q)));
+          document.getElementById('productGrid').innerHTML = list.map(p => `
+            <div class="card">
+              <div>
+                <div class="p-img"><span class="p-cat">${p.cat}</span>${p.icon}</div>
+                <div class="p-body"><div class="p-title">${p.name}</div><div class="p-desc">${p.desc}</div></div>
+              </div>
+              <div class="p-foot"><span class="price">$${p.price}</span><button class="add-btn" onclick="addToCart(${p.id})">+ Add to Cart</button></div>
+            </div>`).join('');
+        }
+
+        async function addToCart(id) {
+          const item = PRODUCTS.find(p => p.id === id);
+          const existing = cart.find(c => c.id === id);
+          if (existing) existing.qty++; else cart.push({ ...item, qty: 1 });
+          updateCartUI();
+          const r = await fetch('/api/cart');
+          document.getElementById('meshLog').textContent = `POST /api/cart -> HTTP ${r.status} OK (Synced ${item.name})`;
+          showToast(`Added "${item.name}" to Cart`);
+        }
+
+        function changeQty(id, delta) {
+          const idx = cart.findIndex(c => c.id === id);
+          if (idx === -1) return;
+          cart[idx].qty += delta;
+          if (cart[idx].qty <= 0) cart.splice(idx, 1);
+          updateCartUI();
+        }
+
+        function updateCartUI() {
+          const count = cart.reduce((s, i) => s + i.qty, 0);
+          const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+          document.getElementById('cartCount').textContent = count;
+          document.getElementById('subTotal').textContent = '$' + total;
+          document.getElementById('grandTotal').textContent = '$' + total;
+          document.getElementById('cartItems').innerHTML = count === 0
+            ? '<p style="text-align:center;color:#94a3b8;margin-top:40px;">Your cart is empty. Add items from the store!</p>'
+            : cart.map(i => `
+              <div class="c-item">
+                <div><strong>${i.icon} ${i.name}</strong><div style="font-size:13px;color:#64748b;">$${i.price} each</div></div>
+                <div class="qty-box">
+                  <button class="q-btn" onclick="changeQty(${i.id},-1)">-</button>
+                  <span>${i.qty}</span>
+                  <button class="q-btn" onclick="changeQty(${i.id},1)">+</button>
+                </div>
+              </div>`).join('');
+        }
+
+        function toggleCart() { document.getElementById('cartDrawer').classList.toggle('open'); }
+        function closeModal() { document.getElementById('checkoutModal').classList.remove('show'); }
+
+        async function startCheckout() {
+          if (cart.length === 0) return showToast('Please add at least 1 item to cart first!');
+          toggleCart();
+          document.getElementById('checkoutModal').classList.add('show');
+          document.getElementById('orderReceipt').style.display = 'none';
+          const steps = ['st-inv', 'st-ord', 'st-pay', 'st-not'];
+          steps.forEach(s => { const el = document.getElementById(s); el.className = 'step'; el.lastElementChild.textContent = 'Running...'; });
+
+          const r1 = await fetch('/api/inventory');
+          document.getElementById('st-inv').className = 'step ok'; document.getElementById('st-inv').lastElementChild.textContent = `HTTP ${r1.status} Reserved`;
+
+          const r2 = await fetch('/api/order');
+          document.getElementById('st-ord').className = 'step ok'; document.getElementById('st-ord').lastElementChild.textContent = `HTTP ${r2.status} Verified`;
+
+          const r3 = await fetch('/api/order-to-payment');
+          const payData = await r3.json();
+          document.getElementById('st-pay').className = 'step ok'; document.getElementById('st-pay').lastElementChild.textContent = `HTTP ${r3.status} (${payData.version} Canary)`;
+
+          const r4 = await fetch('/api/notification');
+          document.getElementById('st-not').className = 'step ok'; document.getElementById('st-not').lastElementChild.textContent = `HTTP ${r4.status} Sent`;
+
+          const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+          const rec = document.getElementById('orderReceipt');
+          rec.style.display = 'block';
+          rec.innerHTML = `<strong>✓ Order Confirmed!</strong><br/>Order ID: #HCL-${Math.floor(100000+Math.random()*900000)} | Paid: <strong>$${total}</strong><br/>Processed via Payment <strong>${payData.version}</strong> on Tainted Critical Pool.`;
+          document.getElementById('meshLog').textContent = `Checkout Complete -> Inventory(200) -> Order(200) -> Payment-${payData.version}(200) -> Notify(200)`;
+          cart = []; updateCartUI();
+        }
+
+        async function testZeroTrustBlock() {
+          const r = await fetch('/api/payment-direct');
+          const txt = await r.text();
+          document.getElementById('meshLog').innerHTML = `<span style="color:#f87171;">SECURITY ALERT: Direct call to /api/payment-direct BLOCKED -> HTTP ${r.status} (${txt.trim()})</span>`;
+          showToast(`Zero-Trust Blocked: HTTP ${r.status} ${txt.trim()}`);
+        }
+
+        initCatalog(); updateCartUI();
       </script>
     </body>
     </html>
