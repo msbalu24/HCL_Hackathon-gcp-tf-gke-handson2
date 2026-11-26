@@ -25,6 +25,76 @@ spec:
   gateways:
     - ecommerce-gateway
   http:
+    - match:
+        - uri:
+            prefix: /api/catalog
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: product-catalog
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /api/cart
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: cart
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /api/inventory
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: inventory
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /api/order-to-payment
+      rewrite:
+        uri: /pay
+      route:
+        - destination:
+            host: order
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /api/order
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: order
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /api/payment-direct
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: payment
+            port:
+              number: 80
+    - match:
+        - uri:
+            prefix: /api/notification
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: notification
+            port:
+              number: 80
     - route:
         - destination:
             host: frontend

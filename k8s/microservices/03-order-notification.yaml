@@ -23,6 +23,7 @@ spec:
         app: order
         version: v1
     spec:
+      serviceAccountName: order-ksa
       nodeSelector:
         role: general
       containers:
@@ -115,6 +116,7 @@ spec:
         app: notification
         version: v1
     spec:
+      serviceAccountName: order-ksa
       nodeSelector:
         role: general
       containers:
