@@ -65,15 +65,16 @@ resource "google_container_cluster" "primary" {
 }
 
 resource "google_container_node_pool" "general_pool" {
-  name       = "general-pool"
-  project    = var.project_id
-  location   = var.region
-  cluster    = google_container_cluster.primary.name
-  node_count = 1
+  name           = "general-pool"
+  project        = var.project_id
+  location       = var.region
+  node_locations = ["${var.region}-a"]
+  cluster        = google_container_cluster.primary.name
+  node_count     = 1
 
   autoscaling {
     min_node_count = 1
-    max_node_count = 2
+    max_node_count = 1
   }
 
   management {
@@ -87,7 +88,7 @@ resource "google_container_node_pool" "general_pool" {
   }
 
   node_config {
-    machine_type    = "e2-medium"
+    machine_type    = "e2-standard-4"
     disk_size_gb    = 30
     disk_type       = "pd-standard"
     service_account = var.gke_node_sa_email
@@ -122,7 +123,7 @@ resource "google_container_node_pool" "critical_pool" {
 
   autoscaling {
     min_node_count = 1
-    max_node_count = 2
+    max_node_count = 1
   }
 
   management {
@@ -131,7 +132,7 @@ resource "google_container_node_pool" "critical_pool" {
   }
 
   node_config {
-    machine_type    = "e2-small"
+    machine_type    = "e2-standard-2"
     disk_size_gb    = 30
     disk_type       = "pd-standard"
     service_account = var.gke_node_sa_email
