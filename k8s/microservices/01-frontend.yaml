@@ -14,13 +14,13 @@ data:
         location /ready { return 200 '{"status":"ready","service":"frontend"}'; add_header Content-Type application/json; }
         location /api/frontend { return 200 '{"service":"frontend","version":"v1","duty":"Web UI & Reverse Proxy Gateway","nodePool":"general-pool"}'; add_header Content-Type application/json; }
 
-        location /api/catalog { proxy_pass http://product-catalog:80/; }
-        location /api/cart { proxy_pass http://cart:80/; }
-        location /api/inventory { proxy_pass http://inventory:80/; }
-        location /api/order { proxy_pass http://order:80/; }
-        location /api/order-to-payment { proxy_pass http://order:80/pay; }
-        location /api/payment-direct { proxy_pass http://payment:80/; }
-        location /api/notification { proxy_pass http://notification:80/; }
+        location /api/catalog { proxy_http_version 1.1; proxy_pass http://product-catalog:80/; }
+        location /api/cart { proxy_http_version 1.1; proxy_pass http://cart:80/; }
+        location /api/inventory { proxy_http_version 1.1; proxy_pass http://inventory:80/; }
+        location /api/order { proxy_http_version 1.1; proxy_pass http://order:80/; }
+        location /api/order-to-payment { proxy_http_version 1.1; proxy_pass http://order:80/pay; }
+        location /api/payment-direct { proxy_http_version 1.1; proxy_pass http://payment:80/; }
+        location /api/notification { proxy_http_version 1.1; proxy_pass http://notification:80/; }
     }
   index.html: |
     <!DOCTYPE html>
