@@ -15,176 +15,63 @@ data:
         location /ready { return 200 '{"status":"ready","service":"frontend"}'; add_header Content-Type application/json; }
         location /api/frontend { return 200 '{"service":"frontend","version":"v1","duty":"Web UI & Reverse Proxy Gateway","nodePool":"general-pool"}'; add_header Content-Type application/json; }
 
-        location /api/catalog { set $up "http://product-catalog:80/"; proxy_http_version 1.1; proxy_pass $up; }
-        location /api/cart { set $up "http://cart:80/"; proxy_http_version 1.1; proxy_pass $up; }
-        location /api/inventory { set $up "http://inventory:80/"; proxy_http_version 1.1; proxy_pass $up; }
-        location /api/order { set $up "http://order:80/"; proxy_http_version 1.1; proxy_pass $up; }
-        location /api/order-to-payment { set $up "http://order:80/pay"; proxy_http_version 1.1; proxy_pass $up; }
-        location /api/payment-direct { set $up "http://payment:80/"; proxy_http_version 1.1; proxy_pass $up; }
-        location /api/notification { set $up "http://notification:80/"; proxy_http_version 1.1; proxy_pass $up; }
+        location /api/catalog { set $u "http://product-catalog:80/"; proxy_http_version 1.1; proxy_pass $u; }
+        location /api/cart { set $u "http://cart:80/"; proxy_http_version 1.1; proxy_pass $u; }
+        location /api/inventory { set $u "http://inventory:80/"; proxy_http_version 1.1; proxy_pass $u; }
+        location /api/order { set $u "http://order:80/"; proxy_http_version 1.1; proxy_pass $u; }
+        location /api/order-to-payment { set $u "http://order:80/pay"; proxy_http_version 1.1; proxy_pass $u; }
+        location /api/payment-direct { set $u "http://payment:80/"; proxy_http_version 1.1; proxy_pass $u; }
+        location /api/notification { set $u "http://notification:80/"; proxy_http_version 1.1; proxy_pass $u; }
     }
   index.html: |
     <!DOCTYPE html>
-    <html lang="en">
+    <html>
     <head>
       <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>HCL Enterprise GKE + Istio E-Commerce Microservices</title>
+      <title>HCL GKE + Istio Microservices Dashboard</title>
       <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 24px; }
-        .header { max-width: 1200px; margin: 0 auto 24px; background: #1e293b; padding: 20px 28px; border-radius: 12px; border-left: 6px solid #38bdf8; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-        .header h1 { margin: 0 0 6px; font-size: 22px; color: #38bdf8; }
-        .header p { margin: 0; color: #94a3b8; font-size: 14px; }
-        .top-actions button { background: #22c55e; color: #052e16; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; }
-        .top-actions button:hover { background: #4ade80; }
-        .grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
-        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; }
-        .card.critical { border-color: #f59e0b; }
-        .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; background: #0284c7; color: #e0f2fe; margin-bottom: 8px; }
-        .badge.warn { background: #b45309; color: #fef3c7; }
-        .card h2 { margin: 0 0 8px; font-size: 18px; color: #f1f5f9; }
-        .duty { font-size: 13.5px; color: #cbd5e1; line-height: 1.5; margin-bottom: 12px; }
-        .meta { font-size: 12px; color: #94a3b8; background: #0f172a; padding: 8px 10px; border-radius: 6px; margin-bottom: 12px; }
-        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
-        button.svc-btn { background: #38bdf8; color: #0f172a; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; }
-        button.svc-btn:hover { background: #7dd3fc; }
-        button.danger-btn { background: #ef4444; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; }
-        button.danger-btn:hover { background: #f87171; }
-        pre { background: #020617; color: #4ade80; padding: 10px; border-radius: 6px; font-size: 12px; overflow-x: auto; margin: 12px 0 0; min-height: 44px; border: 1px solid #1e293b; }
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+        .hdr { max-width: 1150px; margin: 0 auto 20px; background: #1e293b; padding: 18px 24px; border-radius: 10px; border-left: 6px solid #38bdf8; display: flex; justify-content: space-between; align-items: center; }
+        .hdr h1 { margin: 0 0 4px; font-size: 20px; color: #38bdf8; }
+        .hdr p { margin: 0; color: #94a3b8; font-size: 13px; }
+        .all-btn { background: #22c55e; color: #052e16; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .grid { max-width: 1150px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 16px; }
+        .card.crit { border-color: #f59e0b; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #0284c7; color: #e0f2fe; margin-bottom: 6px; }
+        .tag.w { background: #b45309; color: #fef3c7; }
+        h2 { margin: 0 0 6px; font-size: 17px; }
+        .duty { font-size: 13px; color: #cbd5e1; margin-bottom: 10px; }
+        button.b { background: #38bdf8; color: #0f172a; border: none; padding: 7px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-right: 6px; }
+        button.r { background: #ef4444; color: #fff; border: none; padding: 7px 12px; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        pre { background: #020617; color: #4ade80; padding: 8px; border-radius: 5px; font-size: 12px; overflow-x: auto; margin: 10px 0 0; min-height: 38px; }
         pre.err { color: #f87171; }
       </style>
     </head>
     <body>
-      <div class="header">
+      <div class="hdr">
         <div>
           <h1>HCL Enterprise GKE + Istio Service Mesh Dashboard</h1>
           <p>7 E-Commerce Microservices | Strict mTLS | SPIFFE Zero-Trust AuthZ | Canary v1/v2</p>
         </div>
-        <div class="top-actions">
-          <button onclick="testAll()">Run Live Health Check on All 7 Services</button>
-        </div>
+        <button class="all-btn" onclick="testAll()">Run Live Health Check on All 7 Services</button>
       </div>
-
       <div class="grid">
-        <div class="card">
-          <div>
-            <span class="badge">general-pool | HPA 2-6 | PDB</span>
-            <h2>1. Frontend Service</h2>
-            <div class="duty"><strong>Duty:</strong> Customer-facing storefront UI & API reverse-proxy gateway routing user traffic into the Istio mTLS mesh.</div>
-            <div class="meta">Port: 8080 | Probes: Startup, Readiness, Liveness | Envoy: 2/2</div>
-          </div>
-          <div>
-            <div class="btn-row"><button class="svc-btn" onclick="callApi('/api/frontend', 'res-frontend')">Test Frontend</button></div>
-            <pre id="res-frontend">Click button to test live service...</pre>
-          </div>
-        </div>
-
-        <div class="card">
-          <div>
-            <span class="badge">general-pool | Envoy mTLS</span>
-            <h2>2. Product Catalog Service</h2>
-            <div class="duty"><strong>Duty:</strong> Serves product listings, SKUs, pricing metadata, and search results to shoppers.</div>
-            <div class="meta">Port: 8080 | Strict mTLS Enabled | Replicas: 1</div>
-          </div>
-          <div>
-            <div class="btn-row"><button class="svc-btn" onclick="callApi('/api/catalog', 'res-catalog')">Test Product Catalog</button></div>
-            <pre id="res-catalog">Click button to test live service...</pre>
-          </div>
-        </div>
-
-        <div class="card">
-          <div>
-            <span class="badge">general-pool | Envoy mTLS</span>
-            <h2>3. Shopping Cart Service</h2>
-            <div class="duty"><strong>Duty:</strong> Manages active customer shopping sessions, item quantities, and checkout cart state.</div>
-            <div class="meta">Port: 8080 | Strict mTLS Enabled | Replicas: 1</div>
-          </div>
-          <div>
-            <div class="btn-row"><button class="svc-btn" onclick="callApi('/api/cart', 'res-cart')">Test Cart</button></div>
-            <pre id="res-cart">Click button to test live service...</pre>
-          </div>
-        </div>
-
-        <div class="card">
-          <div>
-            <span class="badge">general-pool | Envoy mTLS</span>
-            <h2>4. Inventory Service</h2>
-            <div class="duty"><strong>Duty:</strong> Tracks real-time warehouse stock levels and reserves items during order placement.</div>
-            <div class="meta">Port: 8080 | Strict mTLS Enabled | Replicas: 1</div>
-          </div>
-          <div>
-            <div class="btn-row"><button class="svc-btn" onclick="callApi('/api/inventory', 'res-inventory')">Test Inventory</button></div>
-            <pre id="res-inventory">Click button to test live service...</pre>
-          </div>
-        </div>
-
-        <div class="card">
-          <div>
-            <span class="badge">general-pool | SPIFFE: order-ksa | HPA</span>
-            <h2>5. Order Service</h2>
-            <div class="duty"><strong>Duty:</strong> Orchestrates checkout workflow and is the ONLY service authorized via SPIFFE mTLS to invoke Payment.</div>
-            <div class="meta">Identity: cluster.local/ns/ecommerce/sa/order-ksa</div>
-          </div>
-          <div>
-            <div class="btn-row"><button class="svc-btn" onclick="callApi('/api/order', 'res-order')">Test Order</button></div>
-            <pre id="res-order">Click button to test live service...</pre>
-          </div>
-        </div>
-
-        <div class="card critical">
-          <div>
-            <span class="badge warn">critical-pool (Tainted) | Workload Identity | Canary</span>
-            <h2>6. Payment Service (v1 & v2 Canary)</h2>
-            <div class="duty"><strong>Duty:</strong> Processes PCI-sensitive transactions on dedicated tainted nodes using GCP Secret Manager via Workload Identity.</div>
-            <div class="meta">Taint: dedicated=payment:NoSchedule | AuthZ: Only order-ksa allowed</div>
-          </div>
-          <div>
-            <div class="btn-row">
-              <button class="svc-btn" onclick="callApi('/api/order-to-payment', 'res-payment')">Authorized (Order -> Payment)</button>
-              <button class="danger-btn" onclick="callApi('/api/payment-direct', 'res-payment')">Unauthorized (Frontend -> Payment)</button>
-            </div>
-            <pre id="res-payment">Click Authorized (200 OK) or Unauthorized (403 Block)...</pre>
-          </div>
-        </div>
-
-        <div class="card">
-          <div>
-            <span class="badge">general-pool | Envoy mTLS</span>
-            <h2>7. Notification Service</h2>
-            <div class="duty"><strong>Duty:</strong> Dispatches asynchronous order confirmation emails, SMS alerts, and payment receipts.</div>
-            <div class="meta">Port: 8080 | Zero-Downtime RollingUpdate | Replicas: 1</div>
-          </div>
-          <div>
-            <div class="btn-row"><button class="svc-btn" onclick="callApi('/api/notification', 'res-notification')">Test Notification</button></div>
-            <pre id="res-notification">Click button to test live service...</pre>
-          </div>
-        </div>
+        <div class="card"><span class="tag">general-pool | HPA | PDB</span><h2>1. Frontend Service</h2><div class="duty"><strong>Duty:</strong> Storefront UI & API reverse-proxy gateway into the Istio mTLS mesh.</div><button class="b" onclick="go('/api/frontend','r1')">Test Frontend</button><pre id="r1">Ready...</pre></div>
+        <div class="card"><span class="tag">general-pool | Envoy mTLS</span><h2>2. Product Catalog Service</h2><div class="duty"><strong>Duty:</strong> Serves product listings, SKUs, and pricing metadata.</div><button class="b" onclick="go('/api/catalog','r2')">Test Product Catalog</button><pre id="r2">Ready...</pre></div>
+        <div class="card"><span class="tag">general-pool | Envoy mTLS</span><h2>3. Shopping Cart Service</h2><div class="duty"><strong>Duty:</strong> Manages customer shopping sessions and cart items.</div><button class="b" onclick="go('/api/cart','r3')">Test Cart</button><pre id="r3">Ready...</pre></div>
+        <div class="card"><span class="tag">general-pool | Envoy mTLS</span><h2>4. Inventory Service</h2><div class="duty"><strong>Duty:</strong> Tracks real-time warehouse stock levels and reserves items.</div><button class="b" onclick="go('/api/inventory','r4')">Test Inventory</button><pre id="r4">Ready...</pre></div>
+        <div class="card"><span class="tag">general-pool | SPIFFE: order-ksa</span><h2>5. Order Service</h2><div class="duty"><strong>Duty:</strong> Checkout orchestrator; ONLY service authorized via SPIFFE to call Payment.</div><button class="b" onclick="go('/api/order','r5')">Test Order</button><pre id="r5">Ready...</pre></div>
+        <div class="card crit"><span class="tag w">critical-pool (Tainted) | Canary v1/v2</span><h2>6. Payment Service (v1 & v2)</h2><div class="duty"><strong>Duty:</strong> PCI-sensitive transactions on tainted nodes using GCP Secret Manager.</div><button class="b" onclick="go('/api/order-to-payment','r6')">Authorized (Order -> Payment)</button><button class="r" onclick="go('/api/payment-direct','r6')">Unauthorized (Frontend -> Payment)</button><pre id="r6">Ready...</pre></div>
+        <div class="card"><span class="tag">general-pool | Envoy mTLS</span><h2>7. Notification Service</h2><div class="duty"><strong>Duty:</strong> Sends order confirmation emails and SMS alerts.</div><button class="b" onclick="go('/api/notification','r7')">Test Notification</button><pre id="r7">Ready...</pre></div>
       </div>
-
       <script>
-        async function callApi(url, elementId) {
-          const el = document.getElementById(elementId);
-          el.className = '';
-          el.textContent = 'Calling ' + url + ' ...';
-          try {
-            const res = await fetch(url);
-            const text = await res.text();
-            if (!res.ok) el.className = 'err';
-            el.textContent = 'HTTP ' + res.status + ' ' + res.statusText + '\n' + text;
-          } catch (e) {
-            el.className = 'err';
-            el.textContent = 'Error: ' + e.message;
-          }
+        async function go(u, id) {
+          const el = document.getElementById(id); el.className = ''; el.textContent = 'Calling ' + u + '...';
+          try { const r = await fetch(u); const t = await r.text(); if (!r.ok) el.className = 'err'; el.textContent = 'HTTP ' + r.status + ' ' + r.statusText + '\n' + t; }
+          catch (e) { el.className = 'err'; el.textContent = e.message; }
         }
-        function testAll() {
-          callApi('/api/frontend', 'res-frontend');
-          callApi('/api/catalog', 'res-catalog');
-          callApi('/api/cart', 'res-cart');
-          callApi('/api/inventory', 'res-inventory');
-          callApi('/api/order', 'res-order');
-          callApi('/api/order-to-payment', 'res-payment');
-          callApi('/api/notification', 'res-notification');
-        }
+        function testAll() { go('/api/frontend','r1'); go('/api/catalog','r2'); go('/api/cart','r3'); go('/api/inventory','r4'); go('/api/order','r5'); go('/api/order-to-payment','r6'); go('/api/notification','r7'); }
       </script>
     </body>
     </html>
@@ -199,11 +86,6 @@ metadata:
     version: v1
 spec:
   replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 1
-      maxUnavailable: 0
   selector:
     matchLabels:
       app: frontend
@@ -229,9 +111,6 @@ spec:
             - name: ui-config
               mountPath: /usr/share/nginx/html/index.html
               subPath: index.html
-          envFrom:
-            - configMapRef:
-                name: ecommerce-config
           resources:
             requests:
               cpu: "50m"
@@ -239,24 +118,17 @@ spec:
             limits:
               cpu: "200m"
               memory: "128Mi"
-          startupProbe:
-            httpGet:
-              path: /healthz
-              port: 8080
-            initialDelaySeconds: 2
-            periodSeconds: 3
-            failureThreshold: 10
           readinessProbe:
             httpGet:
               path: /ready
               port: 8080
-            initialDelaySeconds: 3
+            initialDelaySeconds: 2
             periodSeconds: 5
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8080
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 10
       volumes:
         - name: ui-config
@@ -270,8 +142,6 @@ metadata:
   namespace: ecommerce
   labels:
     app: frontend
-  annotations:
-    cloud.google.com/neg: '{"ingress": true}'
 spec:
   type: ClusterIP
   selector:
