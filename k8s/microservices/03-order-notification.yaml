@@ -40,7 +40,8 @@ spec:
                   listen 8080;
                   location /healthz { return 200 '{"status":"alive","service":"order"}'; add_header Content-Type application/json; }
                   location /ready { return 200 '{"status":"ready","service":"order"}'; add_header Content-Type application/json; }
-                  location / { return 200 '{"service":"order","version":"v1","calls":"payment-service"}'; add_header Content-Type application/json; }
+                  location /pay { proxy_pass http://payment:80/; }
+                  location / { return 200 '{"service":"order","version":"v1","workflow":"Checkout-Orchestrator"}'; add_header Content-Type application/json; }
               }
               NGINX
               exec nginx -g 'daemon off;'
@@ -131,10 +132,13 @@ spec:
                   listen 8080;
                   location /healthz { return 200 '{"status":"alive","service":"notification"}'; add_header Content-Type application/json; }
                   location /ready { return 200 '{"status":"ready","service":"notification"}'; add_header Content-Type application/json; }
-                  location / { return 200 '{"service":"notification","version":"v1","channel":"email-sms"}'; add_header Content-Type application/json; }
+                  location / { return 200 '{"service":"notification","version":"v1","channel":"Email-SMS-Dispatch"}'; add_header Content-Type application/json; }
               }
               NGINX
               exec nginx -g 'daemon off;'
+          envFrom:
+            - configMapRef:
+                name: ecommerce-config
           resources:
             requests:
               cpu: "50m"
