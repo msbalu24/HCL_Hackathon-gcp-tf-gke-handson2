@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-v2
+  namespace: ecommerce
+  labels:
+    app: payment
+    version: v2
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: payment
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: payment
+        version: v2
+    spec:
+      serviceAccountName: payment-ksa
+      nodeSelector:
+        workload: payment-critical
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "payment"
+          effect: "NoSchedule"
+      containers:
+        - name: payment
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 8080
+              name: http
+          command:
+            - /bin/sh
+            - -c
+            - |
+              cat << 'NGINX' > /etc/nginx/conf.d/default.conf
+              server {
+                  listen 8080;
+                  location /healthz { return 200 '{"status":"alive","service":"payment","version":"v2"}'; add_header Content-Type application/json; }
+                  location /ready { return 200 '{"status":"ready","service":"payment","version":"v2"}'; add_header Content-Type application/json; }
+                  location / { return 200 '{"service":"payment","version":"v2","gateway":"HCL-Pay-NextGen-Canary"}'; add_header Content-Type application/json; }
+              }
+              NGINX
+              exec nginx -g 'daemon off;'
+          envFrom:
+            - configMapRef:
+                name: ecommerce-config
+            - secretRef:
+                name: payment-k8s-secret
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "96Mi"
+            limits:
+              cpu: "300m"
+              memory: "192Mi"
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: payment-dr
+  namespace: ecommerce
+spec:
+  host: payment
+  subsets:
+    - name: v1
+      labels:
+        version: v1
+    - name: v2
+      labels:
+        version: v2
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: payment-vs
+  namespace: ecommerce
+spec:
+  hosts:
+    - payment
+  http:
+    - route:
+        - destination:
+            host: payment
+            subset: v1
+          weight: 90
+        - destination:
+            host: payment
+            subset: v2
+          weight: 10

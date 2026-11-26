@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: order-ksa
+  namespace: ecommerce
+---
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: ecommerce-strict-mtls
+  namespace: ecommerce
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-order-to-payment
+  namespace: ecommerce
+spec:
+  selector:
+    matchLabels:
+      app: payment
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/ecommerce/sa/order-ksa"]
