@@ -81,6 +81,8 @@ metadata:
   namespace: ecommerce
   labels:
     app: frontend
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
 spec:
   type: ClusterIP
   selector:
